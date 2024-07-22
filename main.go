@@ -1,10 +1,11 @@
 package main
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
-// go run github.com/golang/mock/mockgen -source=main.go -destination=mocks/mock_main.go -package=mocks
-
-//go:generate go run github.com/vektra/mockery/v2@v2.43.2 --name=Database
+//go:generate mockgen -source=main.go -destination=mocks/mocks.go
 
 type Database interface {
 	Get(key string) (string, error)
@@ -32,4 +33,35 @@ func (db *MockDatabase) Get(key string) (string, error) {
 func (db *MockDatabase) Set(key, value string) error {
 	db.Data[key] = value
 	return nil
+}
+
+//========================================= new code=======================================\\
+
+type MyServer struct {
+	db Database
+}
+
+func (serv *MyServer) PrintKeyDB(key string) {
+	if serv.db == nil {
+		return
+	}
+
+	value, err := serv.db.Get(key)
+
+	if err != nil {
+		return
+	}
+
+	fmt.Println(value)
+}
+
+func main() {
+	serv := &MyServer{db: New()}
+
+	if serv.db == nil {
+		return
+	}
+
+	serv.db.Set("testkey", "testvalue")
+	serv.PrintKeyDB("testkey")
 }
